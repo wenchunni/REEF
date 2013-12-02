@@ -25,6 +25,7 @@ import com.microsoft.tang.annotations.Parameter;
 import com.microsoft.tang.exceptions.BindException;
 import com.microsoft.tang.formats.CommandLine;
 import com.microsoft.wake.EventHandler;
+import com.microsoft.wake.remote.RemoteConfiguration;
 import com.microsoft.wake.remote.RemoteIdentifier;
 import com.microsoft.wake.remote.RemoteIdentifierFactory;
 import com.microsoft.wake.remote.RemoteManager;
@@ -54,9 +55,9 @@ public final class Control {
   private final transient int port;
 
   @Inject
-  public Control(@Parameter(SuspendClientControl.Port.class) final int port,
-                 @Parameter(ActivityId.class) final String activityId,
-                 @Parameter(Command.class) final String command) {
+  public Control(final @Parameter(RemoteConfiguration.Port.class) int port,
+                 final @Parameter(ActivityId.class) String activityId,
+                 final @Parameter(Command.class) String command) {
     this.command = command.trim().toLowerCase();
     this.activityId = activityId;
     this.port = port;
@@ -81,7 +82,8 @@ public final class Control {
 
   private static Configuration getConfig(final String[] args) throws IOException, BindException {
     final JavaConfigurationBuilder cb = Tang.Factory.getTang().newConfigurationBuilder();
-    new CommandLine(cb).processCommandLine(args, SuspendClientControl.Port.class, ActivityId.class, Command.class);
+    new CommandLine(cb).processCommandLine(args,
+        RemoteConfiguration.Port.class, ActivityId.class, Command.class);
     return cb.build();
   }
 

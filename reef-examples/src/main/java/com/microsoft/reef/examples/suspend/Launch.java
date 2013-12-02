@@ -30,6 +30,7 @@ import com.microsoft.tang.exceptions.BindException;
 import com.microsoft.tang.exceptions.InjectionException;
 import com.microsoft.tang.formats.CommandLine;
 import com.microsoft.tang.formats.ConfigurationFile;
+import com.microsoft.wake.remote.RemoteConfiguration;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -91,7 +92,7 @@ public final class Launch {
     cl.registerShortNameOfClass(Local.class);
     cl.registerShortNameOfClass(NumCycles.class);
     cl.registerShortNameOfClass(Delay.class);
-    cl.registerShortNameOfClass(SuspendClientControl.Port.class);
+    cl.registerShortNameOfClass(RemoteConfiguration.Port.class);
     cl.processCommandLine(args);
     return confBuilder.build();
   }
@@ -102,8 +103,8 @@ public final class Launch {
     final JavaConfigurationBuilder cb = Tang.Factory.getTang().newConfigurationBuilder();
     cb.bindNamedParameter(NumCycles.class, String.valueOf(injector.getNamedInstance(NumCycles.class)));
     cb.bindNamedParameter(Delay.class, String.valueOf(injector.getNamedInstance(Delay.class)));
-    cb.bindNamedParameter(SuspendClientControl.Port.class,
-        String.valueOf(injector.getNamedInstance(SuspendClientControl.Port.class)));
+    cb.bindNamedParameter(RemoteConfiguration.Port.class,
+        String.valueOf(injector.getNamedInstance(RemoteConfiguration.Port.class)));
     return cb.build();
   }
 

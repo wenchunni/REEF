@@ -16,15 +16,10 @@
 package com.microsoft.reef.examples.suspend;
 
 import com.microsoft.reef.client.RunningJob;
-import com.microsoft.tang.annotations.Name;
-import com.microsoft.tang.annotations.NamedParameter;
-import com.microsoft.tang.annotations.Parameter;
 import com.microsoft.wake.EventHandler;
+import com.microsoft.wake.remote.RemoteManager;
+import com.microsoft.wake.remote.RemoteMessage;
 import com.microsoft.wake.remote.impl.ObjectSerializableCodec;
-import com.microsoft.wake.remote.impl.RemoteEvent;
-import com.microsoft.wake.remote.impl.RemoteReceiverStage;
-import com.microsoft.wake.remote.transport.Transport;
-import com.microsoft.wake.remote.transport.netty.NettyMessagingTransport;
 
 import javax.inject.Inject;
 import java.util.logging.Level;
@@ -35,34 +30,29 @@ import java.util.logging.Logger;
  */
 public class SuspendClientControl implements AutoCloseable {
 
-  @NamedParameter(doc = "Port for suspend/resume control commands",
-      short_name = "port", default_value = "7008")
-  public static final class Port implements Name<Integer> {
-  }
-
   private static final Logger LOG = Logger.getLogger(Control.class.getName());
   private static final ObjectSerializableCodec<String> CODEC = new ObjectSerializableCodec<>();
 
   private transient RunningJob runningJob;
-  private final transient Transport transport;
+  private final transient AutoCloseable transport;
 
   @Inject
-  public SuspendClientControl(@Parameter(SuspendClientControl.Port.class) final int port) {
-    LOG.log(Level.INFO, "Listen to control port {0}", port);
-    final RemoteReceiverStage recvStage = new RemoteReceiverStage(new ControlMessageHandler(), true);
-    this.transport = new NettyMessagingTransport("localhost", port, recvStage, recvStage);
+  public SuspendClientControl(final RemoteManager rm) {
+    this.transport = rm.registerHandler(byte[].class, new ControlMessageHandler());
   }
 
   /**
    * Forward remote message to the job driver.
    */
-  private class ControlMessageHandler implements EventHandler<RemoteEvent<byte[]>> {
+  private class ControlMessageHandler implements EventHandler<RemoteMessage<byte[]>> {
     @Override
-    public synchronized void onNext(final RemoteEvent<byte[]> msg) {
-      LOG.log(Level.INFO, "Control message: {0} destination: {1}",
-              new Object[] { CODEC.decode(msg.getEvent()), runningJob });
-      if (runningJob != null) {
-        runningJob.send(msg.getEvent());
+    public void onNext(final RemoteMessage<byte[]> msg) {
+      synchronized (SuspendClientControl.this) {
+        LOG.log(Level.INFO, "Control message: {0} destination: {1}",
+                new Object[] { CODEC.decode(msg.getMessage()), runningJob });
+        if (runningJob != null) {
+          runningJob.send(msg.getMessage());
+        }
       }
     }
   }

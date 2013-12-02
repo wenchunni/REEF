@@ -55,15 +55,14 @@ public class SuspendClient {
 
   /**
    * @param reef      reference to the REEF framework.
-   * @param port      port to listen to for suspend/resume commands.
    * @param numCycles number of cycles to run in the activity.
    * @param delay     delay in seconds between cycles in the activity.
    */
   @Inject
   SuspendClient(final REEF reef,
-                @Parameter(SuspendClientControl.Port.class) final int port,
-                @Parameter(Launch.NumCycles.class) final int numCycles,
-                @Parameter(Launch.Delay.class) final int delay) throws BindException {
+                final SuspendClientControl control,
+                final @Parameter(Launch.NumCycles.class) int numCycles,
+                final @Parameter(Launch.Delay.class) int delay) throws BindException {
 
     final JavaConfigurationBuilder cb = Tang.Factory.getTang().newConfigurationBuilder();
     cb.bindNamedParameter(Launch.NumCycles.class, Integer.toString(numCycles));
@@ -85,7 +84,7 @@ public class SuspendClient {
 
     this.driverConfig = cb.build();
     this.reef = reef;
-    this.controlListener = new SuspendClientControl(port);
+    this.controlListener = control;
   }
 
   /**
