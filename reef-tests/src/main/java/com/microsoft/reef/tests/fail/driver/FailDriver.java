@@ -83,25 +83,31 @@ public final class FailDriver {
   }
 
   private static final ExpectedMessage[] EVENT_SEQUENCE = {
-      new ExpectedMessage(FailDriver.class, REQUIRED),
-      new ExpectedMessage(StartTime.class, REQUIRED),
-      new ExpectedMessage(AllocatedEvaluator.class, REQUIRED),
-      new ExpectedMessage(FailedEvaluator.class, OPTIONAL),
-      new ExpectedMessage(ActiveContext.class, REQUIRED),
-      new ExpectedMessage(ContextMessage.class, OPTIONAL),
-      new ExpectedMessage(FailedContext.class, OPTIONAL),
-      new ExpectedMessage(RunningActivity.class, REQUIRED),
-      new ExpectedMessage(Alarm.class, REQUIRED),
-      new ExpectedMessage(ActivityMessage.class, REQUIRED),
-      new ExpectedMessage(Alarm.class, REQUIRED),
-      new ExpectedMessage(SuspendedActivity.class, REQUIRED),
-      new ExpectedMessage(RunningActivity.class, REQUIRED),
-      new ExpectedMessage(Alarm.class, REQUIRED),
-      new ExpectedMessage(FailedActivity.class, OPTIONAL),
-      new ExpectedMessage(CompletedActivity.class, REQUIRED),
-      new ExpectedMessage(ClosedContext.class, OPTIONAL),
-      new ExpectedMessage(CompletedEvaluator.class, REQUIRED),
-      new ExpectedMessage(StopTime.class, REQUIRED)
+      new ExpectedMessage(FailDriver.class, REQUIRED),          //0
+      new ExpectedMessage(StartTime.class, REQUIRED),           //1
+      new ExpectedMessage(AllocatedEvaluator.class, REQUIRED),  //2
+      new ExpectedMessage(FailedEvaluator.class, OPTIONAL),     //3
+      new ExpectedMessage(ActiveContext.class, REQUIRED),       //4
+      new ExpectedMessage(ContextMessage.class, OPTIONAL),      //5
+      new ExpectedMessage(FailedContext.class, OPTIONAL),       //6
+      new ExpectedMessage(RunningActivity.class, REQUIRED),     //7
+      new ExpectedMessage(Alarm.class, REQUIRED),               //8
+      new ExpectedMessage(ActivityMessage.class, REQUIRED),     //9
+      new ExpectedMessage(Alarm.class, REQUIRED),               //10
+      new ExpectedMessage(ActivityMessage.class, OPTIONAL),     //11
+      new ExpectedMessage(SuspendedActivity.class, REQUIRED),   //12
+      new ExpectedMessage(ActivityMessage.class, OPTIONAL),     //13
+      new ExpectedMessage(RunningActivity.class, REQUIRED),     //14
+      new ExpectedMessage(Alarm.class, REQUIRED),               //15
+      new ExpectedMessage(ActivityMessage.class, OPTIONAL),     //16
+      new ExpectedMessage(FailedActivity.class, OPTIONAL),      //17
+      new ExpectedMessage(ActivityMessage.class, OPTIONAL),     //18
+      new ExpectedMessage(CompletedActivity.class, REQUIRED),   //19
+      new ExpectedMessage(ClosedContext.class, OPTIONAL),       //20
+      new ExpectedMessage(Alarm.class, OPTIONAL),               //21
+      new ExpectedMessage(CompletedEvaluator.class, REQUIRED),  //22
+      new ExpectedMessage(Alarm.class, OPTIONAL),               //23
+      new ExpectedMessage(StopTime.class, REQUIRED)             //24
   };
 
   private final transient Class<?> failMsgClass;
@@ -328,7 +334,6 @@ public final class FailDriver {
    * @throws DriverSideFailure      if messages are out of order.
    */
   private void checkMsgOrder(final Object msg) throws SimulatedDriverFailure, DriverSideFailure {
-
     final String msgClassName = msg.getClass().getName();
     LOG.log(Level.FINE, "At {0} {1}:{2}", new Object[]{
         this.state, this.expectIdx, msgClassName});
@@ -352,6 +357,7 @@ public final class FailDriver {
 
     // Make sure events arrive in the right order (specified in EVENT_SEQUENCE):
     boolean notFound = true;
+    int startIdx = this.expectIdx;
     for (; this.expectIdx < EVENT_SEQUENCE.length; ++this.expectIdx) {
       if (EVENT_SEQUENCE[expectIdx].msgClass.isInstance(msg)) {
         notFound = false;
@@ -364,7 +370,7 @@ public final class FailDriver {
     if (notFound) {
       LOG.log(Level.SEVERE, "Event out of sequence: {0} {1}:{2}",
           new Object[]{this.state, this.expectIdx, msgClassName});
-      throw new DriverSideFailure("Event out of sequence: " + msgClassName);
+      throw new DriverSideFailure("Event out of sequence: " + this.state + " " + startIdx + " " + EVENT_SEQUENCE[startIdx].msgClass + " " +this.expectIdx + " " + EVENT_SEQUENCE[expectIdx].msgClass + " (" + EVENT_SEQUENCE[expectIdx].requiredFlag + "):"+ msgClassName);
     }
 
     LOG.log(Level.INFO, "{0}: onNext: {1} got: {2}", new Object[]{

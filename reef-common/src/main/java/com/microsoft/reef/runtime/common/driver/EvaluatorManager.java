@@ -478,17 +478,28 @@ public class EvaluatorManager implements Identifiable, AutoCloseable {
       final EvaluatorContext evaluatorContext = this.activeContextMap.get(contextId);
       this.runningActivity = new RunningActivityImpl(this, activityId, evaluatorContext);
       runningActivityEventDispatcher.onNext(this.runningActivity);
-    } else if (ReefServiceProtos.State.SUSPEND == activityState) {
+    }
+    // NOTE: This is forging a RUNNING heartbeat so that we can deliver the activity message.
+    // It needs to be right here, since the forged message must be delivered after INIT, but before SUSPEND, DONE, etc. 
+    if (activityStatusProto.getActivityMessageCount() > 0) {
+  //    assert (this.runningActivity != null);
+      for (final ReefServiceProtos.ActivityStatusProto.ActivityMessageProto activityMessageProto : activityStatusProto.getActivityMessageList()) {
+        activityMessageEventDispatcher.onNext(new ActivityMessageImpl(activityMessageProto.getMessage().toByteArray(), activityId, contextId, activityMessageProto.getSourceId()));
+      }
+    }
+    if (ReefServiceProtos.State.SUSPEND == activityState) {
       final EvaluatorContext evaluatorContext = this.activeContextMap.get(contextId);
       this.runningActivity = null;
       final byte[] message = activityStatusProto.hasResult() ? activityStatusProto.getResult().toByteArray() : null;
       suspendedActivityEventDispatcher.onNext(new SuspendedActivityImpl(evaluatorContext, message, activityId));
-    } else if (ReefServiceProtos.State.DONE == activityState) {
+    } 
+    if (ReefServiceProtos.State.DONE == activityState) {
       final EvaluatorContext evaluatorContext = this.activeContextMap.get(contextId);
       this.runningActivity = null;
       final byte[] message = activityStatusProto.hasResult() ? activityStatusProto.getResult().toByteArray() : null;
       completedActivityEventDispatcher.onNext(new CompletedActivityImpl(evaluatorContext, message, activityId));
-    } else if (ReefServiceProtos.State.FAILED == activityState) {
+    }
+    if (ReefServiceProtos.State.FAILED == activityState) {
       this.runningActivity = null;
       final ObjectSerializableCodec<Exception> codec = new ObjectSerializableCodec<>();
       /* Assuming nothing went wrong with the context:
@@ -499,11 +510,6 @@ public class EvaluatorManager implements Identifiable, AutoCloseable {
           new FailedActivity(activityId, "Failed Activity: " + activityState, Optional.<ActiveContext>of(evaluatorContext));
 
       activityExceptionEventDispatcher.onNext(activityException);
-    } else if (activityStatusProto.getActivityMessageCount() > 0) {
-      assert (this.runningActivity != null);
-      for (final ReefServiceProtos.ActivityStatusProto.ActivityMessageProto activityMessageProto : activityStatusProto.getActivityMessageList()) {
-        activityMessageEventDispatcher.onNext(new ActivityMessageImpl(activityMessageProto.getMessage().toByteArray(), activityId, contextId, activityMessageProto.getSourceId()));
-      }
     }
   }
 
