@@ -234,17 +234,19 @@ final class DriverManager implements EvaluatorRequestor {
     // Make sure that the timestamp we got for this evaluator is newer than the last one we got.
     this.sanityChecker.check(evaluatorId, heartbeat.getTimestamp());
 
+    final EvaluatorManager eval;
     synchronized (this.evaluators) {
-      if (this.evaluators.containsKey(evaluatorId)) {
-        this.evaluators.get(evaluatorId).handle(evaluatorHeartbeatProtoRemoteMessage);
-      } else {
-        String msg = "Contact from unknown evaluator identifier " + evaluatorId;
-        if (heartbeat.hasEvaluatorStatus()) {
-          msg += " with state " + status.getState();
-        }
-        LOG.log(Level.SEVERE, msg);
-        throw new RuntimeException(msg);
+      eval = this.evaluators.get(evaluatorId);
+    }
+    if (eval != null) {
+      eval.handle(evaluatorHeartbeatProtoRemoteMessage);
+    } else {
+      String msg = "Contact from unknown evaluator identifier " + evaluatorId;
+      if (heartbeat.hasEvaluatorStatus()) {
+        msg += " with state " + status.getState();
       }
+      LOG.log(Level.SEVERE, msg);
+      throw new RuntimeException(msg);
     }
   }
 
