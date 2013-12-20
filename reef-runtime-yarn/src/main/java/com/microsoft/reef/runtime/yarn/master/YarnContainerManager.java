@@ -29,7 +29,9 @@ import com.microsoft.reef.runtime.common.launch.LaunchCommandBuilder;
 import com.microsoft.reef.runtime.yarn.util.YarnUtils;
 import com.microsoft.tang.annotations.Parameter;
 import com.microsoft.tang.annotations.Unit;
+import com.microsoft.wake.EStage;
 import com.microsoft.wake.EventHandler;
+import com.microsoft.wake.impl.ThreadPoolStage;
 import com.microsoft.wake.remote.impl.ObjectSerializableCodec;
 import com.microsoft.wake.time.runtime.RuntimeClock;
 import com.microsoft.wake.time.runtime.event.RuntimeStart;
@@ -83,7 +85,7 @@ final class YarnContainerManager implements AMRMClientAsync.CallbackHandler, NMC
 
   private final NMClientAsync nodeManager;
 
-  private final EventHandler<ResourceAllocationProto> resourceAllocationHandler;
+  private final EStage<ResourceAllocationProto> resourceAllocationHandler;
 
   private final EventHandler<ResourceStatusProto> resourceStatusHandler;
 
@@ -110,7 +112,7 @@ final class YarnContainerManager implements AMRMClientAsync.CallbackHandler, NMC
     this.clock = clock;
     this.jobSubmissionDirectory = new Path(jobSubmissionDirectory);
     this.yarnConf = yarnConf;
-    this.resourceAllocationHandler = resourceAllocationHandler;
+    this.resourceAllocationHandler = new ThreadPoolStage<>(resourceAllocationHandler, 8);
     this.resourceStatusHandler = resourceStatusHandler;
     this.runtimeStatusHandlerEventHandler = runtimeStatusProtoEventHandler;
     this.nodeDescriptorProtoEventHandler = nodeDescriptorProtoEventHandler;
@@ -429,13 +431,13 @@ final class YarnContainerManager implements AMRMClientAsync.CallbackHandler, NMC
   private final void onRuntimeError(final Throwable throwable) {
     // SHUTDOWN YARN
     try {
+      resourceAllocationHandler.close();
       resourceManager.unregisterApplicationMaster(FinalApplicationStatus.FAILED, throwable.getMessage(), null);
-    } catch (final YarnException | IOException e) {
+    } catch (final Exception e) {
       LOG.log(Level.WARNING, "Error shutting down YARN application", e);
     } finally {
       resourceManager.stop();
     }
-
 
     final RuntimeStatusProto.Builder runtimeStatusBuilder = RuntimeStatusProto.newBuilder()
         .setState(ReefServiceProtos.State.FAILED)
@@ -457,6 +459,7 @@ final class YarnContainerManager implements AMRMClientAsync.CallbackHandler, NMC
           .build())
           .build();
     }
+
     this.runtimeStatusHandlerEventHandler.onNext(runtimeStatusBuilder.build());
   }
 
@@ -482,7 +485,7 @@ final class YarnContainerManager implements AMRMClientAsync.CallbackHandler, NMC
         nodeManager.start();
         registration = resourceManager.registerApplicationMaster("", 0, "");
       } catch (final YarnException | IOException e) {
-        LOG.log(Level.WARNING, "Error closing YARN Node Manager", e);
+        LOG.log(Level.WARNING, "Error starting YARN Node Manager", e);
         onRuntimeError(e);
       }
     }
@@ -493,13 +496,16 @@ final class YarnContainerManager implements AMRMClientAsync.CallbackHandler, NMC
     @Override
     public void onNext(RuntimeStop runtimeStop) {
 
+      LOG.log(Level.FINE, "Stop Runtime: RM status {0}", resourceManager.getServiceState());
+
       if (resourceManager.getServiceState() == Service.STATE.STARTED) {
 
         // invariant: if RM is still running then we declare success.
         try {
+          resourceAllocationHandler.close();
           resourceManager.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, null, null);
           resourceManager.close();
-        } catch (final YarnException | IOException e) {
+        } catch (final Exception e) {
           LOG.log(Level.WARNING, "Error shutting down YARN application", e);
         }
       }
