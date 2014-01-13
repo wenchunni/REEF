@@ -13,24 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.microsoft.reef.examples.hello;
-
-import com.microsoft.reef.activity.Activity;
-
-import javax.inject.Inject;
 
 /**
- * A 'hello REEF' Activity.
+ * Allocate N evaluators, submit M activities to them, and measure the time.
+ * Each activity does nothing but sleeps for D seconds.
  */
-public final class HelloActivity implements Activity {
-
-  @Inject
-  HelloActivity() {
-  }
-
-  @Override
-  public final byte[] call(final byte[] memento) {
-    System.out.println("Hello, REEF!");
-    return null;
-  }
-}
+package com.microsoft.reef.examples.pool;
