@@ -19,7 +19,7 @@
 :: RUNTIME
 set REEF_VERSION=0.1-SNAPSHOT
 set SELF_JAR=%REEF_HOME%\reef-examples\target\reef-examples-%REEF_VERSION%.jar
-set REEF_JAR=%REEF_HOME%\reef-runtime-yarn\target\reef-runtime-yarn-%REEF_VERSION%-jar-with-dependencies.jar
+set REEF_JAR=%REEF_HOME%\reef-runtime-yarn\target\reef-runtime-yarn-%REEF_VERSION%-jar-with-dependencies.jar;%REEF_HOME%\reef-io\target\reef-io-%REEF_VERSION%.jar;%REEF_HOME%\reef-checkpoint\target\reef-checkpoint-%REEF_VERSION%.jar
 set LOCAL_JAR=%REEF_HOME%\reef-runtime-local\target\reef-runtime-local-%REEF_VERSION%.jar
 
 :: set LOCAL_RUNTIME_TMP="-Dcom.microsoft.reef.runtime.local.folder=%REEF_HOME%\reef-examples\REEF_RUNTIME_LOCAL\"
