@@ -18,7 +18,7 @@
 
 # RUNTIME
 SELF_JAR=`echo $REEF_HOME/reef-examples/target/reef-examples-*.jar`
-REEF_JAR=`echo $REEF_HOME/reef-runtime-yarn/target/reef-runtime-yarn-*-jar-with-dependencies.jar`
+REEF_JAR=`echo $REEF_HOME/reef-runtime-yarn/target/reef-runtime-yarn-*-jar-with-dependencies.jar $REEF_HOME/reef-io/target/reef-io-*.jar $REEF_HOME/reef-checkpoint/target/reef-checkpoint-*.jar | tr ' ' ':'`
 LOCAL_JAR=`echo $REEF_HOME/reef-runtime-local/target/reef-runtime-local-*.jar`
 
 # LOCAL_RUNTIME_TMP="-Dcom.microsoft.reef.runtime.local.folder=$REEF_HOME/reef-examples/REEF_RUNTIME_LOCAL/"
