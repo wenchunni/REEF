@@ -44,10 +44,11 @@ public final class HelloREEF {
 
     final Configuration driverConf =
         EnvironmentUtils.addClasspath(DriverConfiguration.CONF, DriverConfiguration.GLOBAL_LIBRARIES)
-          .set(DriverConfiguration.DRIVER_IDENTIFIER, "HelloREEF")
-          .set(DriverConfiguration.ON_DRIVER_STARTED, HelloDriver.StartHandler.class)
-          .set(DriverConfiguration.ON_EVALUATOR_ALLOCATED, HelloDriver.EvaluatorAllocatedHandler.class)
-        .build();
+            .set(DriverConfiguration.DRIVER_IDENTIFIER, "HelloREEF")
+            .set(DriverConfiguration.ON_DRIVER_STARTED, HelloDriver.StartHandler.class)
+            .set(DriverConfiguration.ON_EVALUATOR_ALLOCATED, HelloDriver.EvaluatorAllocatedHandler.class)
+            .set(DriverConfiguration.ON_ACTIVITY_RUNNING, HelloDriver.ActivityRunningHandler.class)
+            .build();
 
     return DriverLauncher.getLauncher(runtimeConf).run(driverConf, timeOut);
   }

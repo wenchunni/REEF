@@ -16,6 +16,7 @@
 package com.microsoft.reef.examples.hello;
 
 import com.microsoft.reef.driver.activity.ActivityConfiguration;
+import com.microsoft.reef.driver.activity.RunningActivity;
 import com.microsoft.reef.driver.context.ContextConfiguration;
 import com.microsoft.reef.driver.evaluator.AllocatedEvaluator;
 import com.microsoft.reef.driver.evaluator.EvaluatorRequest;
@@ -81,6 +82,13 @@ public final class HelloDriver {
       } catch (final BindException ex) {
         throw new RuntimeException("Unable to setup Activity or Context configuration.", ex);
       }
+    }
+  }
+
+  final class ActivityRunningHandler implements EventHandler<RunningActivity> {
+    @Override
+    public void onNext(final RunningActivity runningActivity) {
+      LOG.log(Level.INFO, "runningActivity on address: " + runningActivity.getActiveContext().getEvaluatorDescriptor().getNodeDescriptor().getInetSocketAddress());
     }
   }
 }
