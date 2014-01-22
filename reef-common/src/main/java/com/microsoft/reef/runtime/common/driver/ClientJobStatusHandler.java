@@ -28,6 +28,7 @@ import com.microsoft.tang.annotations.Parameter;
 import com.microsoft.tang.annotations.Unit;
 import com.microsoft.wake.EventHandler;
 import com.microsoft.wake.remote.impl.ObjectSerializableCodec;
+import com.microsoft.wake.time.event.StartTime;
 import com.microsoft.wake.time.runtime.RuntimeClock;
 import com.microsoft.wake.time.runtime.event.RuntimeStart;
 
@@ -141,10 +142,10 @@ public final class ClientJobStatusHandler implements JobMessageObserver {
     }
   }
 
-  public final class RuntimeStartHandler implements EventHandler<RuntimeStart> {
+  public final class StartHandler implements EventHandler<StartTime> {
     @Override
-    public void onNext(final RuntimeStart runtimeStart) {
-      LOG.log(Level.FINEST,  "Processing runtimeStart: {0}", runtimeStart);
+    public void onNext(final StartTime startTime) {
+      LOG.log(Level.FINEST,  "Processing startTime: {0}", startTime);
       send(JobStatusProto.newBuilder()
           .setIdentifier(ClientJobStatusHandler.this.jobID.toString())
           .setState(ReefServiceProtos.State.INIT)
